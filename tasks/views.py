@@ -1,3 +1,6 @@
+# We import Http404, which is a standard way to tell Django that a specific page doesn't exist.
+from django.http import Http404
+
 # We import APIView, which is the base class for building custom API endpoints.
 from rest_framework.views import APIView
 
@@ -56,4 +59,33 @@ class TaskListView(APIView):
         # We send a '400 Bad Request' status code, which tells the user's app: 
         # "Something is wrong with the data you sent me."
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# We define a new class called TaskDetailView that inherits from APIView.
+# This receptionist handles requests for a SINGLE specific task.
+class TaskDetailView(APIView):
+    
+    # We create a helper method to find a specific task based on its ID (pk).
+    # If the task doesn't exist, it will automatically raise a 404 error.
+    def get_object(self, pk):
+        try:
+            # We try to fetch the task from the database using its primary key (pk).
+            return Task.objects.get(pk=pk)
+        except Task.DoesNotExist:
+            # If the task isn't found, we raise the standard "Not Found" error.
+            raise Http404
+
+    # We define a 'get' method that takes 'pk' as an argument.
+    # This will handle GET requests for a specific task (e.g., /api/tasks/1/).
+    def get(self, request, pk):
+        
+        # We use our helper method to find the task.
+        task = self.get_object(pk)
+        
+        # We hand the single task to our translator (TaskSerializer).
+        # Notice we DON'T use many=True here, because we are only translating ONE item.
+        serializer = TaskSerializer(task)
+        
+        # We return the translated JSON data to the user.
+        return Response(serializer.data)
 
