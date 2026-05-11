@@ -4,6 +4,9 @@ from rest_framework.views import APIView
 # We import Response, which is the standard way to return data from a DRF view.
 from rest_framework.response import Response
 
+# We import status, which gives us the standard HTTP status codes (like 201 Created or 400 Bad Request).
+from rest_framework import status
+
 # We import our Task model so we can fetch data from the database.
 from .models import Task
 
@@ -28,4 +31,29 @@ class TaskListView(APIView):
         # We return the translated JSON data wrapped in a Response object.
         # This sends the data back through the internet to whoever asked for it.
         return Response(serializer.data)
+
+    # We define a 'post' method, which DRF will call whenever someone sends an HTTP POST request.
+    # This is how we allow users to CREATE new tasks in our system.
+    def post(self, request):
+        
+        # We take the raw JSON data that the user sent us (request.data) 
+        # and hand it to our translator (TaskSerializer).
+        serializer = TaskSerializer(data=request.data)
+        
+        # We ask the translator to double-check the data (validation).
+        # Does the title exist? Is it too long? This prevents bad data from entering our database.
+        if serializer.is_valid():
+            
+            # If the data is good, we tell the serializer to save it as a new Task record.
+            serializer.save()
+            
+            # We return the newly created task's data so the user can see it worked.
+            # We also send a '201 Created' status code, which is the standard way 
+            # of saying "Hey, I successfully built that thing you asked for!"
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        # If the data was bad (e.g. they forgot the title), we return the error messages.
+        # We send a '400 Bad Request' status code, which tells the user's app: 
+        # "Something is wrong with the data you sent me."
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
