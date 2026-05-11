@@ -115,4 +115,18 @@ class TaskDetailView(APIView):
         # 6. If the data was bad, we return the error messages.
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # We define a 'delete' method to handle HTTP DELETE requests.
+    # This is how we allow users to REMOVE a task from the system forever.
+    def delete(self, request, pk):
+        
+        # 1. We use our helper method to find the specific task we want to delete.
+        task = self.get_object(pk)
+        
+        # 2. We tell the task object to delete itself from the database.
+        task.delete()
+        
+        # 3. We return a special '204 No Content' status code.
+        # This tells the user: "Success! I deleted it, and there is nothing left to show you."
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
