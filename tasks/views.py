@@ -89,3 +89,30 @@ class TaskDetailView(APIView):
         # We return the translated JSON data to the user.
         return Response(serializer.data)
 
+    # We define a 'put' method to handle HTTP PUT requests.
+    # This is how we allow users to UPDATE an existing task.
+    def put(self, request, pk):
+        
+        # 1. We use our helper method to find the specific task we want to change.
+        task = self.get_object(pk)
+        
+        # 2. We hand the existing task AND the new data from the user to our translator.
+        # By passing both, the serializer knows it should update the existing record
+        # rather than creating a brand new one.
+        # 'partial=True' allows the user to update just one field (like 'is_completed') 
+        # without having to send the entire task data again.
+        serializer = TaskSerializer(task, data=request.data, partial=True)
+        
+        # 3. We check if the new data is valid.
+        if serializer.is_valid():
+            
+            # 4. If it's valid, we save the changes to the database.
+            serializer.save()
+            
+            # 5. We return the updated task data to the user.
+            return Response(serializer.data)
+            
+        # 6. If the data was bad, we return the error messages.
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
